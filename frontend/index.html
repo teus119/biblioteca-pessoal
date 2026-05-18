@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Biblioteca Pessoal — Login</title>
+  <meta name="description" content="Faça login na sua Biblioteca Pessoal e gerencie seus livros." />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<div class="page-center">
+  <div class="auth-card">
+    <div class="logo">
+      <span class="logo-icon">📚</span>
+      <h1>Biblioteca <span class="accent">Pessoal</span></h1>
+      <p>Gerencie seus livros favoritos</p>
+    </div>
+
+    <form id="login-form" novalidate>
+      <div class="form-group">
+        <label class="form-label" for="email">Email</label>
+        <input
+          id="email"
+          type="email"
+          class="form-input"
+          placeholder="seu@email.com"
+          autocomplete="email"
+          required
+        />
+        <span class="field-error" id="email-error"></span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="password">Senha</label>
+        <input
+          id="password"
+          type="password"
+          class="form-input"
+          placeholder="••••••••"
+          autocomplete="current-password"
+          required
+        />
+        <span class="field-error" id="password-error"></span>
+      </div>
+
+      <button id="login-btn" type="submit" class="btn btn-primary btn-full">
+        Entrar
+      </button>
+    </form>
+
+    <div class="divider">ou</div>
+
+    <p style="text-align:center; font-size:0.9rem; color:var(--text-secondary)">
+      Não tem conta?
+      <a href="register.html" class="link">Criar conta</a>
+    </p>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  // Redirecionar se já estiver logado
+  Auth.redirectIfLoggedIn();
+
+  const form = document.getElementById('login-form');
+  const btn  = document.getElementById('login-btn');
+
+  function clearErrors() {
+    document.querySelectorAll('.field-error').forEach(el => {
+      el.textContent = '';
+      el.classList.remove('visible');
+    });
+    document.querySelectorAll('.form-input').forEach(el => el.classList.remove('error'));
+  }
+
+  function showError(fieldId, message) {
+    const input = document.getElementById(fieldId);
+    const error = document.getElementById(`${fieldId}-error`);
+    if (input) input.classList.add('error');
+    if (error) { error.textContent = message; error.classList.add('visible'); }
+  }
+
+  function setLoading(loading) {
+    btn.disabled = loading;
+    btn.innerHTML = loading
+      ? '<span class="loader"></span> Entrando...'
+      : 'Entrar';
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearErrors();
+
+    const email    = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    let valid = true;
+    if (!email) { showError('email', 'Email é obrigatório'); valid = false; }
+    if (!password) { showError('password', 'Senha é obrigatória'); valid = false; }
+    if (!valid) return;
+
+    setLoading(true);
+    try {
+      const data = await api.auth.login({ email, password });
+      Auth.save(data);
+      window.location.href = 'dashboard.html';
+    } catch (err) {
+      Toast.error(err.message || 'Email ou senha inválidos');
+      showError('password', ' ');
+    } finally {
+      setLoading(false);
+    }
+  });
+</script>
+</body>
+</html>

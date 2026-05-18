@@ -1,0 +1,20 @@
+spring:
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017/biblioteca}
+      database: biblioteca
+  application:
+    name: biblioteca-pessoal
+
+server:
+  port: 8080
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:4a8f3c2b1e9d6a7f5c4b3a2e1d0f9e8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e}
+    expiration: 86400000  # 24 horas em ms
+
+logging:
+  level:
+    com.biblioteca: DEBUG
+    org.springframework.security: WARN

@@ -1,0 +1,18 @@
+spring:
+  data:
+    mongodb:
+      # URI sobrescrita dinamicamente pelo Testcontainers via @DynamicPropertySource
+      uri: mongodb://localhost:27017/biblioteca_test
+  application:
+    name: biblioteca-pessoal-test
+
+app:
+  jwt:
+    secret: test-secret-key-must-be-at-least-32-chars-long-for-hs256
+    expiration: 3600000  # 1 hora
+
+logging:
+  level:
+    com.biblioteca: DEBUG
+    org.testcontainers: WARN
+    org.springframework.security: WARN

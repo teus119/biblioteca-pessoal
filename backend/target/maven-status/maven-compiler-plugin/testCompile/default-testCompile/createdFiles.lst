@@ -1,0 +1,9 @@
+com\biblioteca\controller\BookControllerTest.class
+com\biblioteca\vcr\IsbnLookupVcrTest.class
+com\biblioteca\unit\JwtServiceTest.class
+com\biblioteca\unit\BookServiceTest.class
+com\biblioteca\controller\AuthControllerTest.class
+com\biblioteca\MongoTestBase.class
+com\biblioteca\unit\AuthServiceTest.class
+com\biblioteca\vcr\IsbnLookupVcrTest$1.class
+com\biblioteca\integration\BookRepositoryIntegrationTest.class

@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: biblioteca-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: biblioteca
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - biblioteca-network
+
+  # SonarQube apenas para uso local (opcional)
+  # Para CI, use SonarCloud (gratuito para repos públicos)
+  sonarqube:
+    image: sonarqube:10-community
+    container_name: biblioteca-sonar
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+    environment:
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+    volumes:
+      - sonar_data:/opt/sonarqube/data
+      - sonar_logs:/opt/sonarqube/logs
+      - sonar_extensions:/opt/sonarqube/extensions
+    networks:
+      - biblioteca-network
+    profiles:
+      - sonar  # Ativar apenas quando necessário: docker compose --profile sonar up
+
+volumes:
+  mongo_data:
+  sonar_data:
+  sonar_logs:
+  sonar_extensions:
+
+networks:
+  biblioteca-network:
+    driver: bridge

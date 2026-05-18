@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cadastro — Biblioteca Pessoal</title>
+  <meta name="description" content="Crie sua conta na Biblioteca Pessoal." />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<div class="page-center">
+  <div class="auth-card">
+    <div class="logo">
+      <span class="logo-icon">📚</span>
+      <h1>Criar <span class="accent">Conta</span></h1>
+      <p>Comece a organizar sua biblioteca</p>
+    </div>
+
+    <form id="register-form" novalidate>
+      <div class="form-group">
+        <label class="form-label" for="username">Nome de usuário</label>
+        <input
+          id="username"
+          type="text"
+          class="form-input"
+          placeholder="seunome"
+          autocomplete="username"
+          required
+        />
+        <span class="field-error" id="username-error"></span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="email">Email</label>
+        <input
+          id="email"
+          type="email"
+          class="form-input"
+          placeholder="seu@email.com"
+          autocomplete="email"
+          required
+        />
+        <span class="field-error" id="email-error"></span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="password">Senha</label>
+        <input
+          id="password"
+          type="password"
+          class="form-input"
+          placeholder="Mínimo 6 caracteres"
+          autocomplete="new-password"
+          required
+        />
+        <span class="field-error" id="password-error"></span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="confirm">Confirmar senha</label>
+        <input
+          id="confirm"
+          type="password"
+          class="form-input"
+          placeholder="Repita a senha"
+          autocomplete="new-password"
+          required
+        />
+        <span class="field-error" id="confirm-error"></span>
+      </div>
+
+      <button id="register-btn" type="submit" class="btn btn-primary btn-full">
+        Criar conta
+      </button>
+    </form>
+
+    <div class="divider">ou</div>
+
+    <p style="text-align:center; font-size:0.9rem; color:var(--text-secondary)">
+      Já tem conta?
+      <a href="index.html" class="link">Fazer login</a>
+    </p>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  Auth.redirectIfLoggedIn();
+
+  const form = document.getElementById('register-form');
+  const btn  = document.getElementById('register-btn');
+
+  function clearErrors() {
+    document.querySelectorAll('.field-error').forEach(el => { el.textContent = ''; el.classList.remove('visible'); });
+    document.querySelectorAll('.form-input').forEach(el => el.classList.remove('error'));
+  }
+
+  function showError(fieldId, message) {
+    const input = document.getElementById(fieldId);
+    const error = document.getElementById(`${fieldId}-error`);
+    if (input) input.classList.add('error');
+    if (error) { error.textContent = message; error.classList.add('visible'); }
+  }
+
+  function setLoading(loading) {
+    btn.disabled = loading;
+    btn.innerHTML = loading ? '<span class="loader"></span> Criando conta...' : 'Criar conta';
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearErrors();
+
+    const username = document.getElementById('username').value.trim();
+    const email    = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const confirm  = document.getElementById('confirm').value;
+
+    let valid = true;
+    if (!username || username.length < 3) { showError('username', 'Username deve ter no mínimo 3 caracteres'); valid = false; }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showError('email', 'Email inválido'); valid = false; }
+    if (!password || password.length < 6) { showError('password', 'Senha deve ter no mínimo 6 caracteres'); valid = false; }
+    if (password !== confirm) { showError('confirm', 'As senhas não coincidem'); valid = false; }
+    if (!valid) return;
+
+    setLoading(true);
+    try {
+      const data = await api.auth.register({ username, email, password });
+      Auth.save(data);
+      Toast.success('Conta criada com sucesso! 🎉');
+      setTimeout(() => window.location.href = 'dashboard.html', 800);
+    } catch (err) {
+      if (err.fields) {
+        Object.entries(err.fields).forEach(([field, msg]) => showError(field, msg));
+      } else {
+        Toast.error(err.message || 'Erro ao criar conta');
+      }
+    } finally {
+      setLoading(false);
+    }
+  });
+</script>
+</body>
+</html>
