@@ -17,7 +17,7 @@ public abstract class MongoTestBase {
 
     @Container
     protected static final MongoDBContainer mongoDBContainer =
-            new MongoDBContainer(DockerImageName.parse("mongo:7.0"))
+            new MongoDBContainer(DockerImageName.parse("mongo:4.4"))
                     .withReuse(true);
 
     @DynamicPropertySource
