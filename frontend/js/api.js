@@ -58,5 +58,6 @@ const api = {
     delete: (id)       => api._request('DELETE', `/books/${id}`),
     search: (q)        => api._request('GET',    `/books/search?q=${encodeURIComponent(q)}`),
     stats:  ()         => api._request('GET',    '/books/stats'),
+    lookupIsbn: (isbn) => api._request('GET',    `/books/isbn/${isbn}`),
   },
 };

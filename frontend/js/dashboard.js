@@ -277,4 +277,62 @@ function setupEventListeners() {
       closeModal(detailModal);
     }
   });
+
+  // Auto-preenchimento via ISBN
+  const isbnInput = document.getElementById('book-isbn');
+  if (isbnInput) {
+    const performLookup = async () => {
+      const isbn = isbnInput.value.trim().replace(/-/g, '');
+      if (isbn.length === 10 || isbn.length === 13) {
+        if (isbnInput.dataset.lastLookup === isbn) return;
+        isbnInput.dataset.lastLookup = isbn;
+
+        const originalPlaceholder = isbnInput.placeholder;
+        isbnInput.placeholder = 'Buscando dados... 🔍';
+        isbnInput.disabled = true;
+
+        try {
+          const data = await api.books.lookupIsbn(isbn);
+          if (data) {
+            if (data.title && !document.getElementById('book-title').value.trim()) {
+              document.getElementById('book-title').value = data.title;
+            }
+            if (data.authors && data.authors.length > 0 && !document.getElementById('book-author').value.trim()) {
+              document.getElementById('book-author').value = data.authors.map(a => a.name).join(', ');
+            }
+            if (data.cover && (data.cover.large || data.cover.medium || data.cover.small) && !document.getElementById('book-cover').value.trim()) {
+              document.getElementById('book-cover').value = data.cover.large || data.cover.medium || data.cover.small;
+            }
+            if (data.subjects && data.subjects.length > 0 && !document.getElementById('book-genre').value.trim()) {
+              document.getElementById('book-genre').value = data.subjects[0].name;
+            }
+            
+            // Highlight verde de sucesso nos inputs preenchidos
+            const titleInput = document.getElementById('book-title');
+            const authorInput = document.getElementById('book-author');
+            titleInput.style.borderColor = 'var(--status-read)';
+            authorInput.style.borderColor = 'var(--status-read)';
+            setTimeout(() => {
+              titleInput.style.borderColor = '';
+              authorInput.style.borderColor = '';
+            }, 2000);
+          }
+        } catch (err) {
+          console.warn('Erro ao buscar ISBN:', err);
+        } finally {
+          isbnInput.placeholder = originalPlaceholder;
+          isbnInput.disabled = false;
+          isbnInput.focus();
+        }
+      }
+    };
+
+    isbnInput.addEventListener('blur', performLookup);
+    isbnInput.addEventListener('input', () => {
+      const isbn = isbnInput.value.trim().replace(/-/g, '');
+      if (isbn.length === 10 || isbn.length === 13) {
+        performLookup();
+      }
+    });
+  }
 }
