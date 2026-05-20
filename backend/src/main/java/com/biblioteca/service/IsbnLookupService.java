@@ -1,6 +1,6 @@
 package com.biblioteca.service;
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -13,13 +13,18 @@ import java.util.Optional;
  * Endpoint: GET /api/books/isbn/{isbn}
  */
 @Service
-@RequiredArgsConstructor
 public class IsbnLookupService {
 
     private final RestTemplate restTemplate;
+    private final String openLibraryUrl;
 
-    public static final String OPEN_LIBRARY_URL =
-            "https://openlibrary.org/api/books?bibkeys=ISBN:{isbn}&format=json&jscmd=data";
+    public IsbnLookupService(
+            RestTemplate restTemplate,
+            @Value("${isbn.lookup.url:https://openlibrary.org/api/books?bibkeys=ISBN:{isbn}&format=json&jscmd=data}") String openLibraryUrl
+    ) {
+        this.restTemplate = restTemplate;
+        this.openLibraryUrl = openLibraryUrl;
+    }
 
     /**
      * Busca metadados de um livro pelo ISBN na Open Library API.
@@ -29,7 +34,7 @@ public class IsbnLookupService {
     @SuppressWarnings("unchecked")
     public Optional<Map<String, Object>> lookupByIsbn(String isbn) {
         try {
-            String url = OPEN_LIBRARY_URL.replace("{isbn}", isbn);
+            String url = openLibraryUrl.replace("{isbn}", isbn);
             Map<String, Object> response = restTemplate.getForObject(url, Map.class);
 
             if (response == null || response.isEmpty()) {

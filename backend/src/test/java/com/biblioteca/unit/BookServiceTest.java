@@ -112,6 +112,44 @@ class BookServiceTest extends MongoTestBase {
         assertThat(updated.getStatus()).isEqualTo(Book.ReadingStatus.READING);
     }
 
+    @Test
+    @DisplayName("update — deve atualizar todos os campos quando fornecidos")
+    void update_allFields() {
+        BookDTO.Response created = bookService.create(
+                BookDTO.CreateRequest.builder()
+                        .title("Original")
+                        .author("Original")
+                        .isbn("123")
+                        .genre("Original")
+                        .status(Book.ReadingStatus.WISHLIST)
+                        .rating(3)
+                        .notes("Original")
+                        .coverUrl("Original")
+                        .build(), USER_ID);
+
+        BookDTO.UpdateRequest patch = BookDTO.UpdateRequest.builder()
+                .title("Novo Título")
+                .author("Novo Autor")
+                .isbn("456")
+                .genre("Novo Gênero")
+                .status(Book.ReadingStatus.READ)
+                .rating(5)
+                .notes("Novas Notas")
+                .coverUrl("Nova Capa")
+                .build();
+
+        BookDTO.Response updated = bookService.update(created.getId(), patch, USER_ID);
+
+        assertThat(updated.getTitle()).isEqualTo("Novo Título");
+        assertThat(updated.getAuthor()).isEqualTo("Novo Autor");
+        assertThat(updated.getIsbn()).isEqualTo("456");
+        assertThat(updated.getGenre()).isEqualTo("Novo Gênero");
+        assertThat(updated.getStatus()).isEqualTo(Book.ReadingStatus.READ);
+        assertThat(updated.getRating()).isEqualTo(5);
+        assertThat(updated.getNotes()).isEqualTo("Novas Notas");
+        assertThat(updated.getCoverUrl()).isEqualTo("Nova Capa");
+    }
+
     // =========================================================
     // CAIXA BRANCA: Lógica de getStats
     // =========================================================

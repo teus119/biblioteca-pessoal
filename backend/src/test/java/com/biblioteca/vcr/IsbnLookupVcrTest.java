@@ -14,12 +14,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Map;
 import java.util.Optional;
@@ -34,12 +29,15 @@ import static org.assertj.core.api.Assertions.*;
  * O WireMock intercepta as chamadas HTTP e serve respostas gravadas (tapes),
  * garantindo que os testes sejam determinísticos e não dependam de rede.
  */
-@SpringBootTest
+@SpringBootTest(properties = "isbn.lookup.url=http://localhost:9090/api/books?bibkeys=ISBN:{isbn}&format=json&jscmd=data")
 @ActiveProfiles("test")
 @DisplayName("IsbnLookupService — Testes VCR (WireMock)")
 class IsbnLookupVcrTest extends MongoTestBase {
 
     static WireMockServer wireMockServer;
+
+    @Autowired
+    private IsbnLookupService isbnLookupService;
 
     @BeforeAll
     static void startWireMock() {
@@ -56,33 +54,6 @@ class IsbnLookupVcrTest extends MongoTestBase {
     @BeforeEach
     void resetWireMock() {
         wireMockServer.resetAll();
-    }
-
-    /**
-     * Cria uma instância de IsbnLookupService apontando para o WireMock.
-     */
-    private IsbnLookupService buildServiceWithWireMock() {
-        RestTemplate rt = new RestTemplate();
-        IsbnLookupService service = new IsbnLookupService(rt) {
-            @Override
-            public Optional<Map<String, Object>> lookupByIsbn(String isbn) {
-                // Sobrescreve a URL base para apontar para o WireMock
-                try {
-                    String url = "http://localhost:9090/api/books?bibkeys=ISBN:" + isbn + "&format=json&jscmd=data";
-                    @SuppressWarnings("unchecked")
-                    Map<String, Object> response = rt.getForObject(url, Map.class);
-                    if (response == null || response.isEmpty()) return Optional.empty();
-                    Object bookData = response.get("ISBN:" + isbn);
-                    if (bookData instanceof Map<?, ?> map) {
-                        return Optional.of((Map<String, Object>) map);
-                    }
-                    return Optional.empty();
-                } catch (Exception e) {
-                    return Optional.empty();
-                }
-            }
-        };
-        return service;
     }
 
     @Test
@@ -107,8 +78,7 @@ class IsbnLookupVcrTest extends MongoTestBase {
                                 }
                                 """)));
 
-        IsbnLookupService service = buildServiceWithWireMock();
-        Optional<Map<String, Object>> result = service.lookupByIsbn("9780140449136");
+        Optional<Map<String, Object>> result = isbnLookupService.lookupByIsbn("9780140449136");
 
         assertThat(result).isPresent();
         assertThat(result.get()).containsKey("title");
@@ -129,8 +99,7 @@ class IsbnLookupVcrTest extends MongoTestBase {
                         .withHeader("Content-Type", "application/json")
                         .withBody("{}")));
 
-        IsbnLookupService service = buildServiceWithWireMock();
-        Optional<Map<String, Object>> result = service.lookupByIsbn("0000000000");
+        Optional<Map<String, Object>> result = isbnLookupService.lookupByIsbn("0000000000");
 
         assertThat(result).isEmpty();
         verify(1, getRequestedFor(urlPathEqualTo("/api/books")));
@@ -143,8 +112,7 @@ class IsbnLookupVcrTest extends MongoTestBase {
         stubFor(get(urlPathEqualTo("/api/books"))
                 .willReturn(aResponse().withStatus(500)));
 
-        IsbnLookupService service = buildServiceWithWireMock();
-        Optional<Map<String, Object>> result = service.lookupByIsbn("9780000000000");
+        Optional<Map<String, Object>> result = isbnLookupService.lookupByIsbn("9780000000000");
 
         assertThat(result).isEmpty();
     }
@@ -171,8 +139,7 @@ class IsbnLookupVcrTest extends MongoTestBase {
                                 }
                                 """, isbn, expectedTitle, expectedAuthor))));
 
-        IsbnLookupService service = buildServiceWithWireMock();
-        Optional<Map<String, Object>> result = service.lookupByIsbn(isbn);
+        Optional<Map<String, Object>> result = isbnLookupService.lookupByIsbn(isbn);
 
         assertThat(result).isPresent();
         assertThat(result.get().get("title")).isEqualTo(expectedTitle);
